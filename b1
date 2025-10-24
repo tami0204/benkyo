@@ -1,0 +1,77 @@
+using System;
+using System.IO;
+
+public class FileIOService
+{
+    public string[] ReadAllLines(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException("ファイルが見つかりません。", path);
+
+        return File.ReadAllLines(path);
+    }
+
+    public void WriteText(string path, string content)
+    {
+        File.WriteAllText(path, content);
+    }
+}
+------------------------------------------------------------------------------------
+
+public class FileLineCounter
+{
+    private readonly FileIOService _fileIO;
+
+    public FileLineCounter(FileIOService fileIO)
+    {
+        _fileIO = fileIO;
+    }
+
+    public int CountLines(string inputPath)
+    {
+        var lines = _fileIO.ReadAllLines(inputPath);
+        return lines.Length;
+    }
+}
+---------------------------------------------------------------
+public class Program
+{
+    private readonly string inputPath;
+    private readonly string outputPath;
+    
+    private readonly FileIOService fileIO;
+    private readonly FileLineCounter counter;
+    
+	//コンストラクタ
+    public Program()
+    {
+        inputPath = "input.txt";
+        outputPath = "output.txt";
+        
+        fileIO = new FileIOService();
+        counter = new FileLineCounter(fileIO);
+    }
+    
+	//実行部
+    public void Run()
+    {
+        int lineCount = counter.CountLines(inputPath);
+        fileIO.WriteText(outputPath, $"行数: {lineCount}");
+    }
+    
+	//レポート部
+    public void ShowSummary()
+    {
+        string summary = fileIO.ReadText(outputPath);
+        Console.WriteLine(summary);
+    }
+    
+	//処理基幹部
+    public static void Main(string[] args)
+    {
+        var program = new Program();
+        program.Run();
+        program.ShowSummary();
+    }
+
+}
