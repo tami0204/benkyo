@@ -1,0 +1,170 @@
+public  interface  IFFileIOService
+{
+	// ファイルの全行を読み込む(配列)
+	string[]  ReadAllLines(string  inputpath);
+
+    // ファイルにテキストを全件読み込(スナップショット)
+	string  ReadText(string path);
+
+
+    // ファイルにテキストを書き込む
+	void  WriteText(string outputpath, string content);
+	
+}
+========================================================
+using System;
+using System.IO;
+using System.Collections.Generic;
+
+public class FileIOService :IFFileIOService
+{
+    public string[] ReadAllLines(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException("ファイルが見つかりません。", path);
+
+        return File.ReadAllLines(path);
+    }
+
+    public void WriteText(string path, string content)
+    {
+        File.WriteAllText(path, content);
+    }
+
+    public string ReadText(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException ("出力ファイルが存在しません。",path);
+
+        return File.ReadAllText(path);
+    }
+}
+========================================================
+public class FileLineCounter
+{
+//
+//コンストラクタ
+//
+    private readonly IFFileIOService _fileIO; 
+
+    public FileLineCounter(IFFileIOService fileIO) //tami 
+    {
+        _fileIO = fileIO;  tami 
+    }
+
+    public int CountLines(string inputPath)
+    {
+        var lines = _fileIO.ReadAllLines(inputPath);
+
+        // 【習得ステップ①】foreachで行を表示
+        foreach (var line in lines)
+        {
+            Console.WriteLine($"行内容: {line}");
+        }
+
+        // 【習得ステップ②】ifで空ファイル判定
+        if (lines.Length == 0)
+        {
+            Console.WriteLine("ファイルは空です。");
+        }
+
+        return lines.Length;
+    }
+
+    // 【習得ステップ③】whileでダミーカウント（例示）
+    public void DummyWhileLoop()
+    {
+        int i = 0;
+        while (i < 3)
+        {
+            Console.WriteLine($"whileループ中: {i}");
+            i++;
+        }
+    }
+
+    // 【習得ステップ④】forでダミーカウント（例示）
+    public void DummyForLoop()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Console.WriteLine($"forループ中: {i}");
+        }
+    }
+}
+========================================================
+public class Program
+{
+    private readonly string inputPath;
+    private readonly string outputPath;
+
+    private readonly IFFileIOService fileIO;
+    private readonly FileLineCounter counter;
+//----------------------------------------------------
+//コンストラクタ
+//----------------------------------------------------
+    public Program()
+    {
+        inputPath = "input.txt";
+        outputPath = "output.txt";
+
+        fileIO = new FileIOService();
+        
+   // FileLineCounterがFileIOService型を要求している場合
+        counter = new FileLineCounter(fileIO); 
+
+    }
+//
+//処理部
+//
+    public void Run()
+    {
+        int lineCount = counter.CountLines(inputPath);
+
+        // 【習得ステップ⑤】ifで行数に応じた出力
+        string result = OutMojiGet(lineCount);
+        
+        fileIO.WriteText(outputPath, result);
+
+        // ダミーループ呼び出し（習得ステップ③④）
+        counter.DummyWhileLoop();
+        counter.DummyForLoop();
+    }
+//
+//帳票処理
+//
+    public string OutMojiGet(int lineCount)
+    {
+		if  (lineCount == 0)
+			return  "ファイルは空です。"
+		else  if  (lineCount < 5)
+			return  $"行数少な目です（{lineCount}行）"
+		else
+			return  $"行数：{lineCount}行"
+    }
+//
+//帳票処理
+//
+    public void ShowSummary()
+    {
+        string summary = fileIO.ReadText(outputPath);
+        Console.WriteLine($"出力内容: {summary}");
+    }
+//
+//処理基幹部
+//
+	public static void Main(string[] args)
+	{
+    try
+    {
+        var program = new Program();
+        program.Run(); // ← 処理の起点
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"致命的エラー: {ex.Message}");
+        Environment.Exit(1);
+    }
+
+    Environment.Exit(0);
+}
+
