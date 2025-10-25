@@ -18,42 +18,74 @@ using System.Collections.Generic;
 
 public class FileIOService :IFFileIOService
 {
+//-----------------------------------------------------
+//ファイルの全行を読み込む(配列)
+//------------------------------------------------------
     public string[] ReadAllLines(string path)
     {
-        if (!File.Exists(path))
-            throw new FileNotFoundException("ファイルが見つかりません。", path);
+        try
+    	{
+        	return File.ReadAllLines(path); // ← 処理の起点
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=ReadAllLines: {ex.Message}",ex);
+        
+    	} 
 
-        return File.ReadAllLines(path);
     }
+//-----------------------------------------------------
+//ファイルにテキストを全件読み込(スナップショット)
+//------------------------------------------------------
+     public string ReadText(string path)
+    {
+        try
+    	{
+	        return File.ReadAllText(path);
 
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=ReadText: {ex.Message}",ex);
+        
+    	}
+    }
+//-----------------------------------------------------
+//ファイルにテキストを書き込む
+//------------------------------------------------------
     public void WriteText(string path, string content)
     {
-        File.WriteAllText(path, content);
-    }
-
-    public string ReadText(string path)
-    {
-        if (!File.Exists(path))
-            throw new FileNotFoundException ("出力ファイルが存在しません。",path);
-
-        return File.ReadAllText(path);
+        try
+    	{
+            File.WriteAllText(path, content);
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=WriteText: {ex.Message}",ex);
+        
+    	}
     }
 }
 ========================================================
 public class FileLineCounter
 {
-//
+    private readonly IFFileIOService _fileIO; //interfaceへ流し込み後,_fileIOを使用する為
+//----------------------------------------------------
 //コンストラクタ
-//
-    private readonly IFFileIOService _fileIO; 
-
-    public FileLineCounter(IFFileIOService fileIO) //tami 
+//----------------------------------------------------
+    public FileLineCounter(IFFileIOService fileIO) //interfaceへ流し込み後,fileIOを使用する為
     {
-        _fileIO = fileIO;  tami 
+        _fileIO = fileIO;  
     }
-
+//----------------------------------------------------
+//
+//----------------------------------------------------
     public int CountLines(string inputPath)
     {
+    
+       if (!File.Exists(inputPath))
+           throw new FileNotFoundException("ファイルが見つかりません。", inputPath);
+
         var lines = _fileIO.ReadAllLines(inputPath);
 
         // 【習得ステップ①】foreachで行を表示
@@ -97,7 +129,7 @@ public class Program
     private readonly string inputPath;
     private readonly string outputPath;
 
-    private readonly IFFileIOService fileIO;
+    private readonly IFFileIOService fileIO; //実態のFileIOServiceをinterfaceの,fileIOへ流し込む為の器の宣言
     private readonly FileLineCounter counter;
 //----------------------------------------------------
 //コンストラクタ
@@ -107,15 +139,15 @@ public class Program
         inputPath = "input.txt";
         outputPath = "output.txt";
 
-        fileIO = new FileIOService();
+        fileIO = new FileIOService();	//ここで実態のFileIOServiceをinterfaceの,fileIOへ流し込む
         
    // FileLineCounterがFileIOService型を要求している場合
         counter = new FileLineCounter(fileIO); 
 
     }
-//
-//処理部
-//
+//----------------------------------------------------
+//実行部
+//----------------------------------------------------
     public void Run()
     {
         int lineCount = counter.CountLines(inputPath);
@@ -129,9 +161,9 @@ public class Program
         counter.DummyWhileLoop();
         counter.DummyForLoop();
     }
-//
+//----------------------------------------------------
 //帳票処理
-//
+//----------------------------------------------------
     public string OutMojiGet(int lineCount)
     {
 		if  (lineCount == 0)
@@ -141,17 +173,17 @@ public class Program
 		else
 			return  $"行数：{lineCount}行"
     }
-//
+//----------------------------------------------------
 //帳票処理
-//
+//----------------------------------------------------
     public void ShowSummary()
     {
         string summary = fileIO.ReadText(outputPath);
         Console.WriteLine($"出力内容: {summary}");
     }
-//
+//----------------------------------------------------
 //処理基幹部
-//
+//----------------------------------------------------
 	public static void Main(string[] args)
 	{
     try
@@ -161,7 +193,8 @@ public class Program
     }
     catch (Exception ex)
     {
-        Console.Error.WriteLine($"致命的エラー: {ex.Message}");
+    	Console.Error.WriteLine($"[業務エラー] {ex.Message}");
+        Console.Error.WriteLine($"[致命的エラー]: {ex.InnerException.Message}");
         Environment.Exit(1);
     }
 
