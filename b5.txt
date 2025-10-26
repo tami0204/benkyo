@@ -1,15 +1,15 @@
 public  interface  IFFileIOService
 {
 	// ファイルの全行を読み込む(配列)
-	string[]  ReadAllLines(string  inputpath);
+    string[]  ReadAllLines(string  inputpath);
 
     // ファイルにテキストを全件読み込(スナップショット)
-	string  ReadText(string path);
+    string  ReadText(string path);
 
 
     // ファイルにテキストを書き込む
-	void  WriteText(string outputpath, string content);
-	
+    void  WriteText(string outputpath, string content);
+
 }
 ========================================================
 using System;
@@ -24,14 +24,14 @@ public class FileIOService :IFFileIOService
     public string[] ReadAllLines(string path)
     {
         try
-    	{
-        	return File.ReadAllLines(path); // ← 処理の起点
-    	}
-    	catch (Exception ex)
-    	{
-        	throw new ApplicationException($"=ReadAllLines: {ex.Message}",ex);
+        {
+            return File.ReadAllLines(path); // ← 処理の起点
+        }
+        catch (Exception ex)
+        {
+            throw new ApplicationException($"=ReadAllLines: {ex.Message}",ex);
         
-    	} 
+        } 
 
     }
 //-----------------------------------------------------
@@ -40,15 +40,15 @@ public class FileIOService :IFFileIOService
      public string ReadText(string path)
     {
         try
-    	{
-	        return File.ReadAllText(path);
+        {
+            return File.ReadAllText(path);
 
-    	}
-    	catch (Exception ex)
-    	{
+        }
+        catch (Exception ex)
+        {
         	throw new ApplicationException($"=ReadText: {ex.Message}",ex);
         
-    	}
+        }
     }
 //-----------------------------------------------------
 //ファイルにテキストを書き込む
@@ -56,14 +56,14 @@ public class FileIOService :IFFileIOService
     public void WriteText(string path, string content)
     {
         try
-    	{
+        {
             File.WriteAllText(path, content);
-    	}
-    	catch (Exception ex)
-    	{
-        	throw new ApplicationException($"=WriteText: {ex.Message}",ex);
+        }
+        catch (Exception ex)
+        {
+            throw new ApplicationException($"=WriteText: {ex.Message}",ex);
         
-    	}
+        }
     }
 }
 ========================================================
@@ -186,12 +186,12 @@ public class Program
 //----------------------------------------------------
     public string OutMojiGet(int lineCount)
     {
-		if  (lineCount == 0)
-			return  "ファイルは空です。"
-		else  if  (lineCount < 5)
-			return  $"行数少な目です（{lineCount}行）"
-		else
-			return  $"行数：{lineCount}行"
+        if  (lineCount == 0)
+            return  "ファイルは空です。"
+        else  if  (lineCount < 5)
+            return  $"行数少な目です（{lineCount}行）"
+        else
+            return  $"行数：{lineCount}行"
     }
 //----------------------------------------------------
 //帳票処理
@@ -206,7 +206,7 @@ public class Program
 //----------------------------------------------------
     public static void Main(string[] args)
     {
-      var host = Host.CreateDefaultBuilder(args)
+      var host = Host.CreateDefaultBuilder()
           .ConfigureServices(ServiceConfigurator.Configure) // ← ServiceConfigurator.Configureの
           .Build();                                         //ロジックを持ってきている
        
