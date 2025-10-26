@@ -1,0 +1,241 @@
+public  interface  IFFileIOService
+{
+	// ファイルの全行を読み込む(配列)
+	string[]  ReadAllLines(string  inputpath);
+
+    // ファイルにテキストを全件読み込(スナップショット)
+	string  ReadText(string path);
+
+
+    // ファイルにテキストを書き込む
+	void  WriteText(string outputpath, string content);
+	
+}
+========================================================
+using System;
+using System.IO;
+using System.Collections.Generic;
+
+public class FileIOService :IFFileIOService
+{
+//-----------------------------------------------------
+//ファイルの全行を読み込む(配列)
+//------------------------------------------------------
+    public string[] ReadAllLines(string path)
+    {
+        try
+    	{
+        	return File.ReadAllLines(path); // ← 処理の起点
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=ReadAllLines: {ex.Message}",ex);
+        
+    	} 
+
+    }
+//-----------------------------------------------------
+//ファイルにテキストを全件読み込(スナップショット)
+//------------------------------------------------------
+     public string ReadText(string path)
+    {
+        try
+    	{
+	        return File.ReadAllText(path);
+
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=ReadText: {ex.Message}",ex);
+        
+    	}
+    }
+//-----------------------------------------------------
+//ファイルにテキストを書き込む
+//------------------------------------------------------
+    public void WriteText(string path, string content)
+    {
+        try
+    	{
+            File.WriteAllText(path, content);
+    	}
+    	catch (Exception ex)
+    	{
+        	throw new ApplicationException($"=WriteText: {ex.Message}",ex);
+        
+    	}
+    }
+}
+========================================================
+public class FileLineCounter
+{
+    private readonly IFFileIOService _fileIO; //interfaceへ流し込み後,_fileIOを使用する為
+//----------------------------------------------------
+//コンストラクタ
+//----------------------------------------------------
+    public FileLineCounter(IFFileIOService fileIO) //interfaceへ流し込み後,fileIOを使用する為
+    {
+        _fileIO = fileIO;  
+    }
+//----------------------------------------------------
+//
+//----------------------------------------------------
+    public int CountLines(string inputPath)
+    {
+    
+       if (!File.Exists(inputPath))
+           throw new FileNotFoundException("ファイルが見つかりません。", inputPath);
+
+        var lines = _fileIO.ReadAllLines(inputPath);
+
+        // 【習得ステップ①】foreachで行を表示
+        foreach (var line in lines)
+        {
+            Console.WriteLine($"行内容: {line}");
+        }
+
+        // 【習得ステップ②】ifで空ファイル判定
+        if (lines.Length == 0)
+        {
+            Console.WriteLine("ファイルは空です。");
+        }
+
+        return lines.Length;
+    }
+
+    // 【習得ステップ③】whileでダミーカウント（例示）
+    public void DummyWhileLoop()
+    {
+        int i = 0;
+        while (i < 3)
+        {
+            Console.WriteLine($"whileループ中: {i}");
+            i++;
+        }
+    }
+
+    // 【習得ステップ④】forでダミーカウント（例示）
+    public void DummyForLoop()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Console.WriteLine($"forループ中: {i}");
+        }
+    }
+}
+========================================================
+========================================================
+========================================================
+using Microsoft.Extensions.DependencyInjection;   //コンテナＤＩ
+using Microsoft.Extensions.Hosting;   //コンテナＤＩ
+using Microsoft.Extensions.Logging;
+
+public class Program
+{
+//共通ライブラリ
+    private readonly ILogger<Program> _Logger;
+    
+//own area 
+    private readonly string inputPath;
+    private readonly string outputPath;
+    
+//own make class
+    private readonly IFFileIOService _fileIO; //実態のFileIOServiceをinterfaceの,fileIOへ流し込む為の器の宣言
+    private readonly FileLineCounter _counter;
+
+//----------------------------------------------------
+//コンストラクタ
+//ログ出力宣言
+//----------------------------------------------------
+     public Program(ILogger<Program> Logger,
+                    IFFileIOService  fileIO,
+                    FileLineCounter  counter
+                    )
+    {
+    	_Logger  =  Logger;
+    	
+
+        inputPath = "input.txt";
+        outputPath = "output.txt";
+
+        _fileIO = fileIO;	    //ここで実態のFileIOServiceをinterfaceの,fileIOへ流し込む
+        _counter = counter; 
+
+    }
+//----------------------------------------------------
+//実行部
+//----------------------------------------------------
+    public void Run()
+    {
+        _Logger.LogInformation("開始");
+        
+        int lineCount = _counter.CountLines(inputPath);
+
+        // 【習得ステップ⑤】ifで行数に応じた出力
+        string result = OutMojiGet(lineCount);
+        
+        _fileIO.WriteText(outputPath, result);
+
+        // ダミーループ呼び出し（習得ステップ③④）
+        _counter.DummyWhileLoop();
+        _counter.DummyForLoop();
+        
+        _Logger.LogInformation("終了");
+    }
+//----------------------------------------------------
+//帳票処理
+//----------------------------------------------------
+    public string OutMojiGet(int lineCount)
+    {
+		if  (lineCount == 0)
+			return  "ファイルは空です。"
+		else  if  (lineCount < 5)
+			return  $"行数少な目です（{lineCount}行）"
+		else
+			return  $"行数：{lineCount}行"
+    }
+//----------------------------------------------------
+//帳票処理
+//----------------------------------------------------
+    public void ShowSummary()
+    {
+        string summary = _fileIO.ReadText(outputPath);
+        Console.WriteLine($"出力内容: {summary}");
+    }
+//----------------------------------------------------
+//処理基幹部
+//----------------------------------------------------
+    public static void Main(string[] args)
+    {
+ //AddSingletonはinterfaceと実体、
+ //AddTransientは単一実体,
+ //AddLoggingはLOGを使うときに書くやつ
+ //@entry みたいなやつ
+      
+      var host = Host.CreateDefaultBuilder(args)
+        .ConfigureServices(services =>
+        {
+            services.AddSingleton<IFFileIOService, FileIOService>();
+            services.AddTransient<FileLineCounter>();
+            services.AddTransient<Program>();
+            services.AddLogging(config => config.AddConsole());
+        })
+        .Build();
+        
+      
+      try
+      {
+          var program = host.Services.GetRequiredService<Program>();
+          program.Run(); // ← 処理の起点
+      }
+      catch (Exception ex)
+      {
+      	Console.Error.WriteLine($"[業務エラー] {ex.Message}");
+          Console.Error.WriteLine($"[致命的エラー]: {ex.InnerException.Message}");
+        Environment.Exit(1);
+      }
+
+      Environment.Exit(0);
+     }
+}
+
