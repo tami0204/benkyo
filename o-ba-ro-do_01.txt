@@ -1,0 +1,43 @@
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        LogWriter logger = new LogWriter();
+
+        logger.WriteLog("処理を開始しました");
+        logger.WriteLog("処理コード通知", 200);
+        logger.WriteLog("処理完了", DateTime.Now);
+        logger.WriteLog("処理中にエラー発生", new Exception("ファイルが見つかりません"));
+    }
+}
+===================================================================================
+using System;
+
+public class LogWriter
+{
+    // 単純なメッセージ
+    public void WriteLog(string message)
+    {
+        Console.WriteLine($"[INFO] {message}");
+    }
+
+    // メッセージ＋コード
+    public void WriteLog(string message, int code)
+    {
+        Console.WriteLine($"[INFO] {message} (コード: {code})");
+    }
+
+    // メッセージ＋日時
+    public void WriteLog(string message, DateTime timestamp)
+    {
+        Console.WriteLine($"[INFO] {timestamp:yyyy-MM-dd HH:mm:ss} - {message}");
+    }
+
+    // メッセージ＋例外情報
+    public void WriteLog(string message, Exception ex)
+    {
+        Console.WriteLine($"[ERROR] {message} - 例外: {ex.Message}");
+    }
+}

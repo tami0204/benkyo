@@ -1,0 +1,25 @@
+using System;
+
+public abstract class FileProcessor
+{
+    protected abstract void Process();  // ← 差し込みポイントを先に明示
+
+    public void Run()
+    {
+        Console.WriteLine("=== 処理開始ログ ===");
+        Process();  // ← 安心して呼べる
+        Console.WriteLine("=== 処理終了ログ ===");
+    }
+}
+====================================================================
+using System;
+
+public class CsvFileProcessor : FileProcessor
+{
+    // 親クラスの抽象メソッド Process() をオーバーライドして実装
+    protected override void Process()
+    {
+        Console.WriteLine("CSVファイルを読み込み、データを処理します。");
+        // 実際の処理内容（例：ファイル読み込み、データ登録など）はここに記述
+    }
+}
