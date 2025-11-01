@@ -1,0 +1,64 @@
+🧩 サーバ構築のステップ（Windows PCを使う場合）
+🔹 ステップ1：サーバ用PCの準備（PC A）
+
+
+🔹 ステップ2：SQL Server Express のインストール
+- Microsoft公式サイトから SQL Server Express 2022 をダウンロード
+https://www.microsoft.com/ja-jp/sql-server/sql-server-downloads
+- インストーラーを実行 → 「基本」インストールを選択
+- インスタンス名は既定の SQLEXPRESS でOK
+- 認証モードは「混合モード（SQL Server認証 + Windows認証）」を選択
+- 管理者ユーザー（例：sa）のパスワードを設定
+
+🔹 ステップ3：SQL Serverのネットワーク設定
+- SQL Server Configuration Manager を起動
+- 「SQL Server Network Configuration」→「Protocols for SQLEXPRESS」
+- TCP/IP を 有効化
+- 「TCP/IP」→ プロパティ → IP Addresses タブ
+- IPAll セクションの TCP Port に 1433 を設定
+- SQL Server Browser サービスを 自動起動に設定
+
+🔹 ステップ4：ファイアウォール設定
+- Windows Defender ファイアウォールで TCPポート1433 を開放
+- 必要に応じて UDPポート1434（SQL Browser用） も開放
+
+🔹 ステップ5：SkillDBの作成
+- SQL Server Management Studio（SSMS）をインストール
+https://learn.microsoft.com/ja-jp/sql/ssms/download-sql-server-management-studio-ssms
+- SSMSでログイン → 新しいデータベース SkillDB を作成
+- テーブル設計（社員・工程・分類マスタ・スキル登録など）を実施
+
+🔹 ステップ6：クライアントPC（B・C）からの接続確認
+- Excel VBAやSSMSから以下の接続文字列で接続テスト：
+conn.Open "Driver={SQL Server};Server=192.168.1.10\SQLEXPRESS;Database=SkillDB;Uid=skilluser;Pwd=skillpass;"
+
+
+※ 192.168.1.10 はPC Aの固定IP、skilluser はSQL認証ユーザー
+
+================================================================
+✅ 目的：Windowsログイン前でもSQL Serverが起動している状態を作る
+
+🧩 手順：SQL ServerをWindowsサービスとして自動起動させる
+🔹 ステップ1：サービス管理画面を開く
+- Windowsキー + R → services.msc と入力 → Enter
+- 「サービス」画面が開く
+
+🔹 ステップ2：SQL Serverサービスを探す
+- 一覧から SQL Server (SQLEXPRESS) を探す
+※インスタンス名が違う場合は (MSSQLSERVER) や (SKILLDB) などになっていることもあります
+
+🔹 ステップ3：サービスのプロパティを設定
+- ダブルクリックしてプロパティを開く
+- 「スタートアップの種類」→ 「自動」 に設定
+- 「サービスの状態」→ 「開始」 をクリック（すでに開始されていればOK）
+- OKで閉じる
+
+🔹 ステップ4：SQL Server Browser も同様に設定
+- 一覧から SQL Server Browser を探す
+- 同様に「スタートアップの種類」→ 「自動」 に設定
+- 「開始」ボタンで起動
+
+
+
+この設定ができれば、「ログインしっぱなしはNG」という制約の中でも、SkillDBを安定運用できる構造が完成します。
+次は、SkillDBのテーブル定義に進めますか？それとも、Excel様式の列構成を一緒に詰めましょうか？
